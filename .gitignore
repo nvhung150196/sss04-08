@@ -1,0 +1,8 @@
+# Compiled executables
+snake_game
+
+# Score data file
+snake_scores.txt
+
+# macOS system files
+.DS_Store
