@@ -324,26 +324,5 @@ vector<PlayerScore> LoadScores() {
 
 // Display top 10 high scores
 void DisplayHighScores() {
-    vector<PlayerScore> scores = LoadScores();
 
-    // Sort scores in descending order
-    sort(scores.begin(), scores.end(), [](const PlayerScore& a, const PlayerScore& b) {
-        return a.score > b.score;
-    });
-
-    cout << "\n========================================" << endl;
-    cout << "          HIGH SCORES" << endl;
-    cout << "========================================" << endl;
-
-    if (scores.empty()) {
-        cout << "No scores yet. Be the first!" << endl;
-    } else {
-        int displayCount = min(10, (int)scores.size());
-        for (int i = 0; i < displayCount; i++) {
-            cout << (i + 1) << ". " << scores[i].name
-                 << " - " << scores[i].score << " points" << endl;
-        }
-    }
-
-    cout << "========================================" << endl;
 }
