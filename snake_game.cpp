@@ -5,19 +5,31 @@
 #include <unistd.h>     // For usleep()
 #include <termios.h>    // For terminal control
 #include <fcntl.h>      // For non-blocking input
+#include <fstream>      // For file operations
+#include <string>       // For string operations
+#include <algorithm>    // For sorting
 
 using namespace std;
 
 // Game constants
 const int WIDTH = 40;
 const int HEIGHT = 20;
+const string SCORES_FILE = "snake_scores.txt";
 
 // Direction enumeration
 enum Direction { STOP = 0, LEFT, RIGHT, UP, DOWN };
 
+// Player score structure
+struct PlayerScore {
+    string name;
+    int score;
+    time_t timestamp;
+};
+
 // Game variables
 int score;
 bool gameOver;
+string playerName;
 
 // Snake head position
 int headX, headY;
@@ -42,8 +54,23 @@ void Logic();
 void EnableRawMode();
 void DisableRawMode();
 int kbhit();
+void SaveScore(const string& name, int score);
+vector<PlayerScore> LoadScores();
+void DisplayHighScores();
 
 int main() {
+    // Get player name before starting the game
+    system("clear");
+    cout << "========================================" << endl;
+    cout << "       WELCOME TO SNAKE GAME!" << endl;
+    cout << "========================================" << endl;
+    cout << "\nEnter your name: ";
+    getline(cin, playerName);
+
+    if (playerName.empty()) {
+        playerName = "Anonymous";
+    }
+
     EnableRawMode();
     Setup();
 
@@ -55,8 +82,24 @@ int main() {
     }
 
     DisableRawMode();
-    cout << "\n\nGame Over! Final Score: " << score << endl;
-    cout << "Press any key to exit..." << endl;
+    system("clear");
+
+    // Display game over message
+    cout << "\n========================================" << endl;
+    cout << "            GAME OVER!" << endl;
+    cout << "========================================" << endl;
+    cout << "Player: " << playerName << endl;
+    cout << "Final Score: " << score << endl;
+    cout << "========================================" << endl;
+
+    // Save the score
+    SaveScore(playerName, score);
+    cout << "\nYour score has been saved!" << endl;
+
+    // Display high scores
+    DisplayHighScores();
+
+    cout << "\nPress Enter to exit..." << endl;
     cin.get();
 
     return 0;
@@ -149,8 +192,8 @@ void Draw() {
         cout << "#";
     cout << endl;
 
-    // Display score and controls
-    cout << "Score: " << score << endl;
+    // Display player name, score and controls
+    cout << "Player: " << playerName << " | Score: " << score << endl;
     cout << "Controls: W=Up, A=Left, S=Down, D=Right, X=Exit" << endl;
     if (dir == STOP) {
         cout << "Press W to start!" << endl;
@@ -240,4 +283,67 @@ void Logic() {
             }
         }
     }
+}
+
+// Save player score to file
+void SaveScore(const string& name, int score) {
+    ofstream file(SCORES_FILE, ios::app); // Open in append mode
+    if (file.is_open()) {
+        time_t now = time(0);
+        file << name << "," << score << "," << now << endl;
+        file.close();
+    } else {
+        cerr << "Error: Could not save score to file!" << endl;
+    }
+}
+
+// Load all scores from file
+vector<PlayerScore> LoadScores() {
+    vector<PlayerScore> scores;
+    ifstream file(SCORES_FILE);
+
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            PlayerScore ps;
+            size_t pos1 = line.find(',');
+            size_t pos2 = line.find(',', pos1 + 1);
+
+            if (pos1 != string::npos && pos2 != string::npos) {
+                ps.name = line.substr(0, pos1);
+                ps.score = stoi(line.substr(pos1 + 1, pos2 - pos1 - 1));
+                ps.timestamp = stol(line.substr(pos2 + 1));
+                scores.push_back(ps);
+            }
+        }
+        file.close();
+    }
+
+    return scores;
+}
+
+// Display top 10 high scores
+void DisplayHighScores() {
+    vector<PlayerScore> scores = LoadScores();
+
+    // Sort scores in descending order
+    sort(scores.begin(), scores.end(), [](const PlayerScore& a, const PlayerScore& b) {
+        return a.score > b.score;
+    });
+
+    cout << "\n========================================" << endl;
+    cout << "          HIGH SCORES" << endl;
+    cout << "========================================" << endl;
+
+    if (scores.empty()) {
+        cout << "No scores yet. Be the first!" << endl;
+    } else {
+        int displayCount = min(10, (int)scores.size());
+        for (int i = 0; i < displayCount; i++) {
+            cout << (i + 1) << ". " << scores[i].name
+                 << " - " << scores[i].score << " points" << endl;
+        }
+    }
+
+    cout << "========================================" << endl;
 }
