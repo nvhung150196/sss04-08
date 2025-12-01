@@ -57,12 +57,51 @@ int kbhit();
 void SaveScore(const string& name, int score);
 vector<PlayerScore> LoadScores();
 void DisplayHighScores();
+void ShowMainMenu();
+void PlayGame();
 
 int main() {
+    ShowMainMenu();
+    return 0;
+}
+
+void ShowMainMenu() {
+    while (true) {
+        system("clear");
+        cout << "========================================" << endl;
+        cout << "       WELCOME TO SNAKE GAME!" << endl;
+        cout << "========================================" << endl;
+        cout << "\n1. Play Game" << endl;
+        cout << "2. View High Scores" << endl;
+        cout << "3. Exit" << endl;
+        cout << "\nEnter your choice (1-3): ";
+
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") {
+            PlayGame();
+        } else if (choice == "2") {
+            system("clear");
+            DisplayHighScores();
+            cout << "\nPress Enter to return to menu..." << endl;
+            cin.get();
+        } else if (choice == "3") {
+            system("clear");
+            cout << "Thanks for playing! Goodbye!" << endl;
+            break;
+        } else {
+            cout << "\nInvalid choice! Press Enter to try again..." << endl;
+            cin.get();
+        }
+    }
+}
+
+void PlayGame() {
     // Get player name before starting the game
     system("clear");
     cout << "========================================" << endl;
-    cout << "       WELCOME TO SNAKE GAME!" << endl;
+    cout << "       SNAKE GAME - NEW GAME" << endl;
     cout << "========================================" << endl;
     cout << "\nEnter your name: ";
     getline(cin, playerName);
@@ -99,10 +138,8 @@ int main() {
     // Display high scores
     DisplayHighScores();
 
-    cout << "\nPress Enter to exit..." << endl;
+    cout << "\nPress Enter to return to menu..." << endl;
     cin.get();
-
-    return 0;
 }
 
 void EnableRawMode() {
@@ -324,5 +361,26 @@ vector<PlayerScore> LoadScores() {
 
 // Display top 10 high scores
 void DisplayHighScores() {
+    vector<PlayerScore> scores = LoadScores();
 
+    // Sort scores in descending order
+    sort(scores.begin(), scores.end(), [](const PlayerScore& a, const PlayerScore& b) {
+        return a.score > b.score;
+    });
+
+    cout << "\n========================================" << endl;
+    cout << "          HIGH SCORES" << endl;
+    cout << "========================================" << endl;
+
+    if (scores.empty()) {
+        cout << "No scores yet. Be the first!" << endl;
+    } else {
+        int displayCount = min(10, (int)scores.size());
+        for (int i = 0; i < displayCount; i++) {
+            cout << (i + 1) << ". " << scores[i].name
+                 << " - " << scores[i].score << " points" << endl;
+        }
+    }
+
+    cout << "========================================" << endl;
 }
